@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Q3TerrainFromHeightmap": {
+      "commandName": "Project",
+      "commandLineArgs": "\"combined-try2 try1.tif\""
+    }
+  }
+}
