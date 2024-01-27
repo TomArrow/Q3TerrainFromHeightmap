@@ -11,7 +11,7 @@ namespace Q3TerrainFromHeightmap
         static void Main(string[] args)
         {
             Bitmap img = getImage(args[0]);
-            doit(img);
+            doit(img, args.Length > 1 ? int.Parse(args[1]) : 100000);
         }
 
         static Bitmap getImage(string filename)
@@ -20,7 +20,7 @@ namespace Q3TerrainFromHeightmap
             return bmp;
         }
 
-        static void doit(Bitmap img, int maxBrushes = 30000)
+        static void doit(Bitmap img, int maxBrushes = 100000)
         {
             StringBuilder sb = new StringBuilder();
 
