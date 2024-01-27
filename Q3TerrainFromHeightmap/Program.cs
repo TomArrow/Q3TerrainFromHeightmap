@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ImageMagick;
+using System;
 using System.Drawing;
 using System.IO;
 using System.Numerics;
@@ -10,18 +11,24 @@ namespace Q3TerrainFromHeightmap
     {
         static void Main(string[] args)
         {
-            Bitmap img = getImage(args[0]);
+            Image img = getImage(args[0]);
             doit(img, args.Length > 1 ? int.Parse(args[1]) : 100000);
         }
 
-        static Bitmap getImage(string filename)
+        static Image getImage(string filename)
         {
-            Bitmap bmp = new Bitmap(filename);
+            if(filename.EndsWith(".tif",StringComparison.InvariantCultureIgnoreCase)|| filename.EndsWith(".tiff", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return Helpers.TiffAsImage(filename);
+            }
+            Image bmp = Image.FromFile(filename,true);
             return bmp;
         }
 
-        static void doit(Bitmap img, int maxBrushes = 100000)
+        static void doit(Image img, int maxBrushes = 100000)
         {
+
+            img.Save("testresave.png");
             StringBuilder sb = new StringBuilder();
 
             sb.Append("{\n\"classname\" \"worldspawn\"");
@@ -48,11 +55,10 @@ namespace Q3TerrainFromHeightmap
                 totalSizeX = totalSizeY * imgRatio;
             }
 
-            Bitmap imgScaled = Helpers.scaleImage(img, xRes, yRes);
+            Image imgScaled = Helpers.scaleImage(img, xRes, yRes);
             imgScaled.Save("testscaled.png");
-            img.Dispose();
 
-            ShortImage shortImage = Helpers.BitmapToShortArray(imgScaled);
+            ShortImage shortImage = Helpers.BitmapToShortArray((Bitmap)imgScaled);
 
             float heightScale = 1000;
 
