@@ -84,7 +84,7 @@ namespace Q3TerrainFromHeightmap
             float startX = -totalSizeX / 2.0f;
             float startY = -totalSizeY / 2.0f;
 
-            Vector3[] points = new Vector3[8];
+            Vector3[] points = new Vector3[9];
 
             if (patches)
             {
@@ -96,15 +96,28 @@ namespace Q3TerrainFromHeightmap
                         sb.Append("\n{\npatchDef2\n{");
                         sb.Append("\nNULL\n( 3 3 0 0 0 )\n(");
 
-                        for(int row = 0; row < 3; row++)
-                        {
-                            // The comments are from bird's eye perspective
-                            points[0] = new Vector3() { X = startX + x * tileWidth, Y = startY + (y+row) * tileHeight, Z = heights[x, y+row] }; // Left
-                            points[1] = new Vector3() { X = startX + (x + 1) * tileWidth, Y = startY + (y + row) * tileHeight, Z = heights[x + 1, y + row] }; // Mid
-                            points[2] = new Vector3() { X = startX + (x + 2) * tileWidth, Y = startY + (y + row) * tileHeight, Z = heights[x + 2, y + row] }; // Right
+                        // The comments are from bird's eye perspective
+                        points[0] = new Vector3() { X = startX + x * tileWidth, Y = startY + (y+0) * tileHeight, Z = heights[x, y+0] }; // Left
+                        points[1] = new Vector3() { X = startX + (x + 1) * tileWidth, Y = startY + (y + 0) * tileHeight, Z = heights[x + 1, y + 0] }; // Mid
+                        points[2] = new Vector3() { X = startX + (x + 2) * tileWidth, Y = startY + (y + 0) * tileHeight, Z = heights[x + 2, y + 0] }; // Right
 
-                            sb.Append(ToPatchText(points[0], points[1], points[2]));
-                        }
+                        points[3] = new Vector3() { X = startX + x * tileWidth, Y = startY + (y+1) * tileHeight, Z = heights[x, y+1] }; // Left
+                        points[4] = new Vector3() { X = startX + (x + 1) * tileWidth, Y = startY + (y + 1) * tileHeight, Z = heights[x + 1, y + 1] }; // Mid
+                        points[5] = new Vector3() { X = startX + (x + 2) * tileWidth, Y = startY + (y + 1) * tileHeight, Z = heights[x + 2, y + 1] }; // Right
+
+                        points[6] = new Vector3() { X = startX + x * tileWidth, Y = startY + (y+2) * tileHeight, Z = heights[x, y+2] }; // Left
+                        points[7] = new Vector3() { X = startX + (x + 1) * tileWidth, Y = startY + (y + 2) * tileHeight, Z = heights[x + 1, y + 2] }; // Mid
+                        points[8] = new Vector3() { X = startX + (x + 2) * tileWidth, Y = startY + (y + 2) * tileHeight, Z = heights[x + 2, y + 2] }; // Right
+
+                        points[1].Z = (4.0f * points[1].Z - points[0].Z - points[2].Z) * 0.5f;
+                        points[7].Z = (4.0f * points[7].Z - points[8].Z - points[6].Z) * 0.5f;
+                        points[3].Z = (4.0f * points[3].Z - points[0].Z - points[6].Z) * 0.5f;
+                        points[5].Z = (4.0f * points[5].Z - points[2].Z - points[8].Z) * 0.5f;
+                        points[4].Z = ((4.0f * points[4].Z - points[3].Z - points[5].Z) * 0.5f + (4.0f * points[4].Z - points[1].Z - points[7].Z) * 0.5f)*0.5f;
+
+                        sb.Append(ToPatchText(points[0], points[1], points[2]));
+                        sb.Append(ToPatchText(points[3], points[4], points[5]));
+                        sb.Append(ToPatchText(points[6], points[7], points[8]));
 
 
                         sb.Append("\n)");

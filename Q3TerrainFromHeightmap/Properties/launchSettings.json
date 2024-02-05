@@ -2,7 +2,7 @@
   "profiles": {
     "Q3TerrainFromHeightmap": {
       "commandName": "Project",
-      "commandLineArgs": "\"RaindanceCropped.tif\" 1000 patches"
+      "commandLineArgs": "\"RaindanceCropped.tif\" 3000 patches"
     }
   }
 }
