@@ -90,7 +90,9 @@ namespace Q3TerrainFromHeightmap
             AverageHelper[,] outputData = new AverageHelper[width, height];
 
             float scaleRatio = (float)width / (float)orig.Width;
-            float radiusToSet = 1.0f / scaleRatio;
+            float radiusToSet = scaleRatio; //1.0f / scaleRatio;
+
+            float oneDiagonal = (float)Math.Sqrt(2.0f);
 
             //Parallel.For(0, width, (x) =>
             //{
@@ -113,10 +115,14 @@ namespace Q3TerrainFromHeightmap
                     {
                         for (int yTarget = targetYMin; yTarget <= targetYMax; yTarget++)
                         {
-                            float xDist = Math.Abs(xTarget - targetX);
-                            float yDist = Math.Abs(yTarget - targetY);
-                            float distance = (float)Math.Sqrt(xDist * xDist + yDist * yDist);
-                            float weight = (float)Math.Exp(-Math.Pow((distance * 2 * scaleRatio), 2.0f));
+                            float xDist = Math.Abs((float)xTarget/ scaleRatio- (float)x);
+                            float yDist = Math.Abs((float)yTarget / scaleRatio- (float)y);
+                            float distance = (float)Math.Sqrt(xDist * xDist + yDist * yDist)*Math.Min(1.0f,scaleRatio);
+                            float weight = (float)Math.Exp(-Math.Pow((distance/oneDiagonal * 2.0f), 2.0f));
+                            //float xDist = Math.Abs(xTarget - targetX);
+                            //float yDist = Math.Abs(yTarget - targetY);
+                            //float distance = (float)Math.Sqrt(xDist * xDist + yDist * yDist);
+                            //float weight = (float)Math.Exp(-Math.Pow((distance/oneDiagonal * 2.0f), 2.0f));
                             outputData[xTarget, yTarget].total += (float)srcImage.imageData[y * (srcImage.stride / 2) + x * pixMult] * weight;
                             outputData[xTarget, yTarget].divider += weight;
                         }

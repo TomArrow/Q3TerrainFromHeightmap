@@ -55,6 +55,13 @@ namespace Q3TerrainFromHeightmap
                 totalSizeX = totalSizeY * imgRatio;
             }
 
+            if (patches)
+            {
+                // Lowpass filter?
+                img = Helpers.scaleImage(img,xRes/2,yRes/2);
+                img.Save("testprescaled.png");
+            }
+
             Image imgScaled = Helpers.scaleImage(img, xRes, yRes);
             imgScaled.Save("testscaled.png");
 
@@ -109,6 +116,7 @@ namespace Q3TerrainFromHeightmap
                         points[7] = new Vector3() { X = startX + (x + 1) * tileWidth, Y = startY + (y + 2) * tileHeight, Z = heights[x + 1, y + 2] }; // Mid
                         points[8] = new Vector3() { X = startX + (x + 2) * tileWidth, Y = startY + (y + 2) * tileHeight, Z = heights[x + 2, y + 2] }; // Right
 
+                        // Figure out correct control points so that the actual surfaces goes through the intended point. Not sure if correct, I don't understand it. Thanks for hints @ SomaZ!
                         points[1].Z = (4.0f * points[1].Z - points[0].Z - points[2].Z) * 0.5f;
                         points[7].Z = (4.0f * points[7].Z - points[8].Z - points[6].Z) * 0.5f;
                         points[3].Z = (4.0f * points[3].Z - points[0].Z - points[6].Z) * 0.5f;
