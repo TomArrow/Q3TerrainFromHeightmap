@@ -2,7 +2,7 @@
   "profiles": {
     "Q3TerrainFromHeightmap": {
       "commandName": "Project",
-      "commandLineArgs": "\"DangerousCrossingCropped.tif\""
+      "commandLineArgs": "\"combined-try2 try1.tif\""
     }
   }
 }

@@ -18,7 +18,7 @@ namespace Q3TerrainFromHeightmap
             public double divider;
         }
 
-        public static Image scaleImage(Image orig, int maxWidth, int maxHeight)
+        public static Image scaleImage(Image orig, int maxWidth, int maxHeight, bool hqGauss=true)
         {
 
             int width = orig.Width;
@@ -50,12 +50,30 @@ namespace Q3TerrainFromHeightmap
                 return orig;
             }
 
+            if (!hqGauss)
+            {
+                Bitmap clone = new Bitmap(width, height,
+                   System.Drawing.Imaging.PixelFormat.Format48bppRgb);
+                using (Graphics gr = Graphics.FromImage(clone))
+                {
+                    gr.Clear(Color.White);
+                    gr.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    gr.SmoothingMode = SmoothingMode.HighQuality;
+                    gr.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                    gr.CompositingQuality = CompositingQuality.HighQuality;
+                    gr.DrawImage(orig, new Rectangle(0, 0, width, height));
+                    orig.Dispose();
+                }
+
+                return clone;
+            }
+
             ShortImage srcImage = Helpers.BitmapToShortArray((Bitmap)orig);
 
-            Bitmap clone = new Bitmap(width, height,
+            Bitmap clone2 = new Bitmap(width, height,
                 System.Drawing.Imaging.PixelFormat.Format48bppRgb);
-            ShortImage destImage = Helpers.BitmapToShortArray(clone);
-            clone.Dispose();
+            ShortImage destImage = Helpers.BitmapToShortArray(clone2);
+            clone2.Dispose();
 
             int pixMult = 3;
 
@@ -73,6 +91,9 @@ namespace Q3TerrainFromHeightmap
 
             float scaleRatio = (float)width / (float)orig.Width;
             float radiusToSet = 1.0f / scaleRatio;
+
+            //Parallel.For(0, width, (x) =>
+            //{
 
             for (int x = 0; x < orig.Width; x++)
             {
@@ -103,6 +124,7 @@ namespace Q3TerrainFromHeightmap
 
                 }
             }
+            //});
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
@@ -117,19 +139,6 @@ namespace Q3TerrainFromHeightmap
             return Helpers.ShortArrayToBitmap(destImage);
 
 
-            /*
-            using (Graphics gr = Graphics.FromImage(clone))
-            {
-                gr.Clear(Color.White);
-                gr.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                gr.SmoothingMode = SmoothingMode.HighQuality;
-                gr.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                gr.CompositingQuality = CompositingQuality.Invalid;
-                gr.DrawImage(orig, new Rectangle(0,0,width,height));
-
-            }
-
-            return clone;*/
         }
 
         public unsafe static ShortImage BitmapToShortArray(Bitmap bmp)
