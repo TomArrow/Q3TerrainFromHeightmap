@@ -12,7 +12,7 @@ namespace Q3TerrainFromHeightmap
         static void Main(string[] args)
         {
             Image img = getImage(args[0]);
-            doit(img, args.Length > 1 ? int.Parse(args[1]) : 100000);
+            doit(img, args.Length > 1 ? int.Parse(args[1]) : 100000, args.Length > 2 ? args[2] == "patches" : false);
         }
 
         static Image getImage(string filename)
@@ -25,7 +25,7 @@ namespace Q3TerrainFromHeightmap
             return bmp;
         }
 
-        static void doit(Image img, int maxBrushes = 100000)
+        static void doit(Image img, int maxBrushes = 100000, bool patches=false)
         {
 
             img.Save("testresave.png");
@@ -86,50 +86,82 @@ namespace Q3TerrainFromHeightmap
 
             Vector3[] points = new Vector3[8];
 
-            for (int x = 0; x < xRes-1; x++)
+            if (patches)
             {
-                for (int y = 0; y < yRes-1; y++)
+
+                for (int x = 0; x < xRes - 2; x+=2)
                 {
-                    sb.Append("\n{\nbrushDef\n{");
-
-                    // The comments are from bird's eye perspective
-                    points[0] = new Vector3() { X= startX + x*tileWidth, Y= startY+y*tileHeight, Z = heights[x,y] }; // Left upper
-                    points[1] = new Vector3() { X= startX + (x+1)*tileWidth, Y= startY+y*tileHeight, Z = heights[x+1,y] }; // Right upper
-                    points[2] = new Vector3() { X= startX + (x+1)*tileWidth, Y= startY+(y+1)*tileHeight, Z = heights[x+1,y+1] }; // right lower
-                    points[3] = new Vector3() { X= startX + x*tileWidth, Y= startY+(y+1)*tileHeight, Z = heights[x,y+1] }; // left lower
-
-                    for (int i = 0; i < 4; i++)
+                    for (int y = 0; y < yRes - 2; y+=2)
                     {
-                        points[i + 4] = points[i];
-                        points[i+4].Z = -100;
+                        sb.Append("\n{\npatchDef2\n{");
+                        sb.Append("\nNULL\n( 3 3 0 0 0 )\n(");
+
+                        for(int row = 0; row < 3; row++)
+                        {
+                            // The comments are from bird's eye perspective
+                            points[0] = new Vector3() { X = startX + x * tileWidth, Y = startY + (y+row) * tileHeight, Z = heights[x, y+row] }; // Left
+                            points[1] = new Vector3() { X = startX + (x + 1) * tileWidth, Y = startY + (y + row) * tileHeight, Z = heights[x + 1, y + row] }; // Mid
+                            points[2] = new Vector3() { X = startX + (x + 2) * tileWidth, Y = startY + (y + row) * tileHeight, Z = heights[x + 2, y + row] }; // Right
+
+                            sb.Append(ToPatchText(points[0], points[1], points[2]));
+                        }
+
+
+                        sb.Append("\n)");
+
+                        sb.Append("\n}\n}");
                     }
+                }
+            } else
+            {
 
-                    // Z Top planes
-                    Vector3 mid1 = (points[0] + points[2]) / 2.0f;
-                    Vector3 mid2 = (points[1] + points[3]) / 2.0f;
-                    if(mid1.Z >= mid2.Z)
+                for (int x = 0; x < xRes - 1; x++)
+                {
+                    for (int y = 0; y < yRes - 1; y++)
                     {
-                        sb.Append(ToBrushText(points[0], points[1], points[2]));
-                        sb.Append(ToBrushText(points[0], points[2], points[3]));
-                    } else
-                    {
-                        sb.Append(ToBrushText(points[1], points[2], points[3]));
-                        sb.Append(ToBrushText(points[1], points[3], points[0]));
+                        sb.Append("\n{\nbrushDef\n{");
+
+                        // The comments are from bird's eye perspective
+                        points[0] = new Vector3() { X = startX + x * tileWidth, Y = startY + y * tileHeight, Z = heights[x, y] }; // Left upper
+                        points[1] = new Vector3() { X = startX + (x + 1) * tileWidth, Y = startY + y * tileHeight, Z = heights[x + 1, y] }; // Right upper
+                        points[2] = new Vector3() { X = startX + (x + 1) * tileWidth, Y = startY + (y + 1) * tileHeight, Z = heights[x + 1, y + 1] }; // right lower
+                        points[3] = new Vector3() { X = startX + x * tileWidth, Y = startY + (y + 1) * tileHeight, Z = heights[x, y + 1] }; // left lower
+
+                        for (int i = 0; i < 4; i++)
+                        {
+                            points[i + 4] = points[i];
+                            points[i + 4].Z = -100;
+                        }
+
+                        // Z Top planes
+                        Vector3 mid1 = (points[0] + points[2]) / 2.0f;
+                        Vector3 mid2 = (points[1] + points[3]) / 2.0f;
+                        if (mid1.Z >= mid2.Z)
+                        {
+                            sb.Append(ToBrushText(points[0], points[1], points[2]));
+                            sb.Append(ToBrushText(points[0], points[2], points[3]));
+                        }
+                        else
+                        {
+                            sb.Append(ToBrushText(points[1], points[2], points[3]));
+                            sb.Append(ToBrushText(points[1], points[3], points[0]));
+                        }
+
+                        // Z Bottom plane
+                        sb.Append(ToBrushText(points[4 + 2], points[4 + 1], points[4 + 0]));
+
+                        // Side planes (bird's eye perspective)
+                        sb.Append(ToBrushText(points[0], points[0 + 4], points[1 + 4])); // Top plane
+                        sb.Append(ToBrushText(points[1], points[1 + 4], points[2 + 4])); // Right plane
+                        sb.Append(ToBrushText(points[2], points[2 + 4], points[3 + 4])); // Bottom plane
+                        sb.Append(ToBrushText(points[3], points[3 + 4], points[0 + 4])); // Left plane
+
+
+                        sb.Append("\n}\n}");
                     }
-
-                    // Z Bottom plane
-                    sb.Append(ToBrushText(points[4+2], points[4+1], points[4+0]));
-
-                    // Side planes (bird's eye perspective)
-                    sb.Append(ToBrushText(points[0], points[0+4], points[1+4])); // Top plane
-                    sb.Append(ToBrushText(points[1], points[1+4], points[2+4])); // Right plane
-                    sb.Append(ToBrushText(points[2], points[2+4], points[3+4])); // Bottom plane
-                    sb.Append(ToBrushText(points[3], points[3+4], points[0+4])); // Left plane
-
-
-                    sb.Append("\n}\n}");
                 }
             }
+
 
             sb.Append("\n}");
 
@@ -245,6 +277,43 @@ namespace Q3TerrainFromHeightmap
             sb.Append(" ");
             sb.Append(c.Z.ToString("0.###"));
             sb.Append($" ) ( ( 0 0 0 ) ( 0 0 0 ) ) system/caulk 0 0 0");
+
+            return sb.ToString();
+        }
+        
+        static string ToPatchText(Vector3 a, Vector3 b, Vector3 c)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            (a, c) = (c, a);
+
+            sb.Append($"\n(");
+
+            sb.Append($" ( ");
+            sb.Append(a.X.ToString("0.###"));
+            sb.Append(" ");
+            sb.Append(a.Y.ToString("0.###"));
+            sb.Append(" ");
+            sb.Append(a.Z.ToString("0.###"));
+            sb.Append($" 0 0 )");
+
+            sb.Append($" ( ");
+            sb.Append(b.X.ToString("0.###"));
+            sb.Append(" ");
+            sb.Append(b.Y.ToString("0.###"));
+            sb.Append(" ");
+            sb.Append(b.Z.ToString("0.###"));
+            sb.Append($" 0 0 )");
+
+            sb.Append($" ( ");
+            sb.Append(c.X.ToString("0.###"));
+            sb.Append(" ");
+            sb.Append(c.Y.ToString("0.###"));
+            sb.Append(" ");
+            sb.Append(c.Z.ToString("0.###"));
+            sb.Append($" 0 0 )");
+
+            sb.Append($" )");
 
             return sb.ToString();
         }
